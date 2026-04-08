@@ -41,8 +41,8 @@ def warp_perspective(img1: Image, img2: Image) -> None:
     """
 
     projection_matrix = np.array([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
+        [1, 0, 0, 100],
+        [0, 1, 0, 200],
         [0, 0, 1, 0],
         [0, 0, -1/500, 1]
     ])
