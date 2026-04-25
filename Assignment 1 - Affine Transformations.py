@@ -2,32 +2,22 @@ from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 
-image_path1 = "Images/Assignment 1 Images/Street.bmp"
-image_2 = np.zeros((200, 200))
+def make_ladder_mask(width: int = 220, height: int = 220, spacing: int = 24) -> np.ndarray:
+    ladder = np.zeros((height, width), dtype=np.uint8)
 
-spacing = 20
+    left_rail = width // 3
+    right_rail = width - left_rail
 
-image_2[::spacing, :] = 1
-image_2[:, ::spacing] = 1
+    ladder[12:height - 12, left_rail - 2:left_rail + 2] = 255
+    ladder[12:height - 12, right_rail - 2:right_rail + 2] = 255
 
-img1 = Image.open(image_path1)
-gray_img1 = img1.convert("L")
+    for y in range(16, height - 16, spacing):
+        ladder[y - 1:y + 2, left_rail:right_rail] = 255
 
-image_2 = Image.fromarray((image_2 * 255).astype(np.uint8))
+    return ladder
 
-width1, height1 = gray_img1.size
-
-width2, height2 = image_2.size
-
-def warp_perspective(img1: Image, img2: Image) -> Image:
-    """
-    Perspective warp using homogeneous coordinates.
-
-    The source image (img2) is projected with a simple perspective matrix,
-    then translated into img1's coordinate space.
-    """
+def warp_perspective(img1: Image, img2: np.ndarray) -> Image:
     width1, height1 = img1.size
-    width2, height2 = img2.size
 
     projection_matrix = np.array([
         [1.0, 0.0, 0.0, 0.0],
@@ -36,9 +26,8 @@ def warp_perspective(img1: Image, img2: Image) -> Image:
         [0.0, 0.0, -1.0 / 500.0, 1.0]
     ], dtype=float)
 
-    # Center the warped grid on top of img1 (instead of shifting far off-screen).
     k1 = width1 / 2.0
-    k2 = height1 * 0.65
+    k2 = height1 * 0.70
     translation_matrix = np.array([
         [1.0, 0.0, 0.0, k1],
         [0.0, 1.0, 0.0, k2],
@@ -48,9 +37,11 @@ def warp_perspective(img1: Image, img2: Image) -> Image:
 
     output = img1.copy()
 
+    height2, width2 = img2.shape
+
     for x in range(width2):
         for y in range(height2):
-            value = img2.getpixel((x, y))
+            value = img2[y, x]
             if value == 0:
                 continue
 
@@ -74,9 +65,16 @@ def warp_perspective(img1: Image, img2: Image) -> Image:
             y_new = int(round(result_translated[1]))
 
             if 0 <= x_new < width1 and 0 <= y_new < height1:
-                output.putpixel((x_new, y_new), value)
+                output.putpixel((x_new, y_new), int(value))
 
-    output.show()
     return output
 
+image_path1 = "Images/Assignment 1 Images/Street.bmp"
+
+image_2 = make_ladder_mask()
+
+img1 = Image.open(image_path1)
+gray_img1 = img1.convert("L")
+
 warped_img = warp_perspective(gray_img1, image_2)
+warped_img.show()
