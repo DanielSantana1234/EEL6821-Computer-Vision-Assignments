@@ -19,63 +19,64 @@ width1, height1 = gray_img1.size
 
 width2, height2 = image_2.size
 
-#gray_img1.paste(image_2, (int(width1/2) - 750, int(height1/2) + 100), mask = image_2)
+def warp_perspective(img1: Image, img2: Image) -> Image:
+    """
+    Perspective warp using homogeneous coordinates.
 
-def projection_result(img1: Image, img2: Image) -> Image:
+    The source image (img2) is projected with a simple perspective matrix,
+    then translated into img1's coordinate space.
     """
-        A function to calculate the 3x3 homography matrix.
-            Args:
-                img1: The first image to be transformed.
-                img2: The second image to be used as a reference for the transformation.
-    """
-    
-    pass
-
-def warp_perspective(img1: Image, img2: Image) -> None:
-    """
-        A function to perform the perspective warp on a given 2d image.
-            Args:
-                img: The image to be transformed.
-                src_points: The source points for the perspective transform.
-                dst_points: The destination points for the perspective transform.
-    """
+    width1, height1 = img1.size
+    width2, height2 = img2.size
 
     projection_matrix = np.array([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, -1/500, 1]
-    ])
-    # warped_image = Image.new("L", (width1, height1))
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, -1.0 / 500.0, 1.0]
+    ], dtype=float)
+
+    # Center the warped grid on top of img1 (instead of shifting far off-screen).
+    k1 = width1 / 2.0
+    k2 = height1 * 0.65
+    translation_matrix = np.array([
+        [1.0, 0.0, 0.0, k1],
+        [0.0, 1.0, 0.0, k2],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0]
+    ], dtype=float)
+
+    output = img1.copy()
+
     for x in range(width2):
         for y in range(height2):
-            curr_coord = img2.getpixel((x, y))
-            if curr_coord == 0:
+            value = img2.getpixel((x, y))
+            if value == 0:
                 continue
 
-            z = (y - height2 / 2.0) * 4.0
-            
-            pixel_coord = np.array([x, y, z, 1])
-            result = np.dot(projection_matrix, pixel_coord)
+            # Use centered local coordinates before projection.
+            xc = x - (width2 / 2.0)
+            yc = y - (height2 / 2.0)
+            z = yc * 4.0
 
-            # Normalize the result
-            result[0] /= result[3]
-            result[1] /= result[3]
-            result[2] /= result[3]
+            pixel_coord = np.array([xc, yc, z, 1.0], dtype=float)
+            result = projection_matrix @ pixel_coord
+            result_translated = translation_matrix @ result
 
-            # Map the result back to the image coordinates
-            x_new = int(result[0])
-            y_new = int(result[1])
-            z_new = int(result[2])
+            w = result_translated[3]
+            if abs(w) < 1e-8:
+                continue
 
-            # Set the pixel value in the warped image
+            result_translated[0] /= w
+            result_translated[1] /= w
+
+            x_new = int(round(result_translated[0]))
+            y_new = int(round(result_translated[1]))
+
             if 0 <= x_new < width1 and 0 <= y_new < height1:
-                img1.putpixel((x_new, y_new), img2.getpixel((x, y)))
-                
-    img1.show()
+                output.putpixel((x_new, y_new), value)
 
-    return gray_img1
+    output.show()
+    return output
 
-# warp_perspective(gray_img1, img2)
-# gray_img1.show()
-warp_perspective(gray_img1, image_2)
+warped_img = warp_perspective(gray_img1, image_2)
