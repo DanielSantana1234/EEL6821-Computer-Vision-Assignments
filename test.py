@@ -4,11 +4,10 @@ import numpy as np
 WIDTH, HEIGHT = 800, 600
 FPS = 60
 BG_COLOR = (0, 0, 0)
-LADDER_COLOR = (255, 255, 255)   # wood-ish brown
-GROUND_COLOR = (40, 40, 40)     # subtle floor tint
+LADDER_COLOR = (255, 255, 255)
+GROUND_COLOR = (40, 40, 40)
 
 def make_background(width: int, height: int) -> np.ndarray:
-    """Create a simple grayscale floor-like background."""
     bg = np.zeros((height, width), dtype=np.uint8)
     for y in range(height):
         shade = int(15 + 70 * (y / max(1, height - 1)))
@@ -17,7 +16,6 @@ def make_background(width: int, height: int) -> np.ndarray:
 
 
 def make_ladder_mask(width: int = 220, height: int = 220, spacing: int = 24) -> np.ndarray:
-    """Create a white ladder mask on black background (img2)."""
     ladder = np.zeros((height, width), dtype=np.uint8)
 
     left_rail = width // 3
@@ -33,9 +31,6 @@ def make_ladder_mask(width: int = 220, height: int = 220, spacing: int = 24) -> 
 
 
 def warp_perspective(img1: np.ndarray, img2: np.ndarray) -> np.ndarray:
-    """
-    A function to perform the perspective warp on a given 2d image.
-    """
     height1, width1 = img1.shape
     height2, width2 = img2.shape
 
@@ -85,7 +80,6 @@ def warp_perspective(img1: np.ndarray, img2: np.ndarray) -> np.ndarray:
 
 
 def to_pygame_surface(gray_img: np.ndarray) -> pygame.Surface:
-    """Convert (H, W) grayscale to an RGB pygame surface."""
     rgb = np.repeat(gray_img[:, :, np.newaxis], 3, axis=2)
     return pygame.surfarray.make_surface(np.transpose(rgb, (1, 0, 2)))
 
