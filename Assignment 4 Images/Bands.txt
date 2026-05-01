@@ -1,0 +1,10 @@
+Pan	450-800 nm	625 nm
+Costal 	400-450 nm	425 nm
+Blue 	450-510 nm	480 nm
+Green 	510-580 nm	545 nm
+Yellow 	585-625 nm	605 nm
+Red 	630-690 nm	660 nm
+RedEdge	705-745 nm	725 nm
+NIR1	770-895 nm	832.5 nm
+NIR2	860-1040 nm	950 nm
+
